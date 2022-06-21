@@ -3,7 +3,9 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/akdilsiz/go-phoenix-socket-client)](https://goreportcard.com/report/github.com/akdilsiz/go-phoenix-socket-client)
 [![codecov](https://codecov.io/gh/akdilsiz/go-phoenix-socket-client/branch/master/graph/badge.svg?token=VXFDYNHSKB)](https://codecov.io/gh/akdilsiz/go-phoenix-socket-client)  
 
-GoPhoenixSocketClient is a golang port of phoenix.js
+GoPhoenixSocketClient is a golang port of phoenix.js  
+
+This project should first port phoenix.js (javascript) to golang. Then it should be compliant with golang standards.
 
 ## Installation
 ```shell
