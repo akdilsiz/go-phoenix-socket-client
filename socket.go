@@ -1,4 +1,4 @@
-package go_phoenix_socket_client
+package gophoenixsocketclient
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// Socket ..
+// Socket phoenix websocket transport interface
 type Socket interface {
 	Protocol() string
 	EndpointURL() string
@@ -58,7 +58,7 @@ type socket struct {
 	onOpen                 func(msg Message)
 }
 
-// NewSocket ..
+// NewSocket initialize phoenix websocket connector
 func NewSocket(ctx context.Context, endpoint string, options ...*SocketOptions) Socket {
 	s := new(socket)
 	s.ctx = ctx
@@ -114,6 +114,7 @@ func (s *socket) hasLogger() bool {
 	return s.logger != nil
 }
 
+// MakeRef ..
 func (s *socket) MakeRef() string {
 	newRef := s.ref + 1
 	if newRef == s.ref {
@@ -181,6 +182,7 @@ func (s *socket) Teardown(callback func(), code int, reason string) {
 
 }
 
+// Connect ..
 func (s *socket) Connect() {
 	s.connectClock++
 	if s.wsConn != nil {

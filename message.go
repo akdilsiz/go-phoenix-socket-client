@@ -1,7 +1,8 @@
-package go_phoenix_socket_client
+package gophoenixsocketclient
 
 import "github.com/akdilsiz/go-phoenix-socket-client/constants"
 
+// Message ..
 type Message struct {
 	JoinRef string                 `json:"join_ref"`
 	Ref     string                 `json:"ref"`

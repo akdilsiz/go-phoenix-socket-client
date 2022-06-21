@@ -1,5 +1,6 @@
-package go_phoenix_socket_client
+package gophoenixsocketclient
 
+// CloseEvent ..
 type CloseEvent struct {
 	Code     int
 	Reason   string

@@ -1,5 +1,6 @@
-package go_phoenix_socket_client
+package gophoenixsocketclient
 
+// Received ..
 type Received struct {
 	Status   string
 	Response []byte

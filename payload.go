@@ -1,4 +1,4 @@
-package go_phoenix_socket_client
+package gophoenixsocketclient
 
 //type Payload interface {
 //	ToString() string

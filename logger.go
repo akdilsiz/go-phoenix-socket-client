@@ -1,4 +1,4 @@
-package go_phoenix_socket_client
+package gophoenixsocketclient
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"runtime"
 )
 
+// Logger logging system interface
 type Logger interface {
 	Info(service string, method string, args ...interface{})
 	Warn(service string, method string, args ...interface{})
@@ -24,6 +25,7 @@ type logger struct {
 	version string
 }
 
+// NewLogger initialize logging system
 func NewLogger(ctx context.Context, version string) Logger {
 	l := new(logger)
 	l.ctx = ctx
@@ -45,6 +47,7 @@ func (l *logger) init() {
 	})
 }
 
+// Format ..
 func (l *logger) Format(format string) Logger {
 	switch format {
 	case "json":
@@ -58,6 +61,7 @@ func (l *logger) Format(format string) Logger {
 	return l
 }
 
+// Level ..
 func (l *logger) Level(level string) Logger {
 	lNew := new(logger)
 	lNew.init()
@@ -78,6 +82,7 @@ func (l *logger) Level(level string) Logger {
 	return lNew
 }
 
+// Printf ..
 func (l *logger) Printf(format string, args ...interface{}) {
 	_, _, no, _ := runtime.Caller(1)
 	l.e.WithFields(log.Fields{
@@ -85,6 +90,7 @@ func (l *logger) Printf(format string, args ...interface{}) {
 	}).Printf(format, args...)
 }
 
+// Info ..
 func (l logger) Info(service string, method string, args ...interface{}) {
 	_, _, no, _ := runtime.Caller(1)
 	l.e.WithFields(log.Fields{
@@ -94,6 +100,7 @@ func (l logger) Info(service string, method string, args ...interface{}) {
 	}).Info(args...)
 }
 
+// Warn ..
 func (l logger) Warn(service string, method string, args ...interface{}) {
 	_, _, no, _ := runtime.Caller(1)
 	l.e.WithFields(log.Fields{
@@ -103,6 +110,7 @@ func (l logger) Warn(service string, method string, args ...interface{}) {
 	}).Warn(args...)
 }
 
+// Debug ..
 func (l logger) Debug(service string, method string, args ...interface{}) {
 	_, _, no, _ := runtime.Caller(1)
 	l.e.WithFields(log.Fields{
@@ -112,6 +120,7 @@ func (l logger) Debug(service string, method string, args ...interface{}) {
 	}).Debug(args...)
 }
 
+// Error ..
 func (l logger) Error(service string, method string, args ...interface{}) {
 	_, _, no, _ := runtime.Caller(1)
 	l.e.WithFields(log.Fields{
