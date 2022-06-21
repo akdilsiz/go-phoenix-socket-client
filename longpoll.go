@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// Longpoll phoenix longpoll transport interface
 type Longpoll interface {
 	EndpointURL() (*url.URL, error)
 	SetOnClose(fn func(event CloseEvent))
@@ -26,6 +27,7 @@ type longpoll struct {
 	onError       func(err string)
 }
 
+// NewLongpoll initialize phoenix longpoll connector
 func NewLongpoll(ctx context.Context, endpoint string) Longpoll {
 	lp := new(longpoll)
 	lp.ctx = ctx
@@ -41,6 +43,7 @@ func (lp *longpoll) normalizeEndpoint() string {
 	return e
 }
 
+// EndpointURL ..
 func (lp *longpoll) EndpointURL() (*url.URL, error) {
 	u, err := url.Parse(lp.pollEndpoint)
 	if err != nil {
@@ -51,12 +54,14 @@ func (lp *longpoll) EndpointURL() (*url.URL, error) {
 	return u, nil
 }
 
+// SetOnClose ..
 func (lp *longpoll) SetOnClose(fn func(event CloseEvent)) {
 	lp.mut.Lock()
 	lp.onClose = fn
 	lp.mut.Unlock()
 }
 
+// SetOnError ..
 func (lp *longpoll) SetOnError(fn func(err string)) {
 	lp.mut.Lock()
 	lp.onError = fn

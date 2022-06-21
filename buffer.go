@@ -18,6 +18,7 @@ func NewBuffer(l int64) *Buffer {
 	return &Buffer{buf: make([]byte, l), l: l}
 }
 
+// NewBufferFromValues make offset writable memory buffer with defined buf.
 func NewBufferFromValues(buf []byte) *Buffer {
 	return &Buffer{buf: buf, l: int64(cap(buf))}
 }

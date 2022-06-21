@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Push ..
 type Push interface {
 	Resend(timeout time.Duration)
 	Reset()
@@ -22,6 +23,7 @@ type push struct {
 	sent         bool
 }
 
+// NewPush ..
 func NewPush(channel string,
 	event constants.ChannelEvent,
 	payload []byte,
@@ -38,16 +40,19 @@ func NewPush(channel string,
 	return p
 }
 
+// Resend ..
 func (p *push) Resend(timeout time.Duration) {
 	p.timeout = timeout
 	p.Reset()
 	p.Send()
 }
 
+// Send ..
 func (p *push) Send() {
 
 }
 
+// Reset ..
 func (p *push) Reset() {
 
 }

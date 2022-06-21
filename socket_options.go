@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// TimerCalc ..
 type TimerCalc func(tries int) time.Duration
 
 var (
@@ -28,6 +29,7 @@ var (
 	}
 )
 
+// SocketOptions phoenix websocket connector options
 type SocketOptions struct {
 	Timeout             time.Duration
 	Transport           constants.Transport
@@ -42,6 +44,7 @@ type SocketOptions struct {
 	VSN                 string
 }
 
+// DefaultSocketOptions phoenix websocket default options
 func DefaultSocketOptions() *SocketOptions {
 	so := new(SocketOptions)
 	so.Timeout = constants.DefaultTimeout

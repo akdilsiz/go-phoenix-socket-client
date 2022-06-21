@@ -35,7 +35,7 @@ func TestTimer_ScheduleTimeout(t *testing.T) {
 		return time.Second * 1
 	}
 	callback := func() {
-		callbackEventCount += 1
+		callbackEventCount++
 	}
 	tmr := NewTimer(ctx, callback, timerCalc)
 	tmr.ScheduleTimeout()
@@ -51,7 +51,7 @@ func TestTimer_Reset(t *testing.T) {
 		return time.Second * 1
 	}
 	callback := func() {
-		callbackEventCount += 1
+		callbackEventCount++
 	}
 	tmr := NewTimer(ctx, callback, timerCalc)
 	tmr.ScheduleTimeout()

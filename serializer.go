@@ -2,6 +2,7 @@ package gophoenixsocketclient
 
 import "fmt"
 
+// Serializer ..
 type Serializer interface {
 	Encode(message Message, callback func([]byte))
 	Decode(rawPayload []byte, callback func([]byte))
@@ -17,6 +18,7 @@ type serializer struct {
 	}
 }
 
+// NewSerializer initialize default serializer
 func NewSerializer() Serializer {
 	e := &serializer{
 		headerLength: 1,

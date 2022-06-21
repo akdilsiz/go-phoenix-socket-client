@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Timer scheduling system
 type Timer interface {
 	Tries() int
 	Reset()
@@ -21,6 +22,7 @@ type timer struct {
 	tries          int
 }
 
+// NewTimer initialize timer
 func NewTimer(ctx context.Context, callback func(), timerCalc TimerCalc) Timer {
 	t := new(timer)
 	t.ctx = ctx
@@ -30,10 +32,12 @@ func NewTimer(ctx context.Context, callback func(), timerCalc TimerCalc) Timer {
 	return t
 }
 
+// Tries how many times it has been scheduled
 func (t *timer) Tries() int {
 	return t.tries
 }
 
+// Reset resetting to the timer
 func (t *timer) Reset() {
 	t.tries = 0
 	if t.timer != nil {
@@ -42,6 +46,7 @@ func (t *timer) Reset() {
 	}
 }
 
+// ScheduleTimeout timer is applied repeatedly with the number of tries
 func (t *timer) ScheduleTimeout() {
 	if t.timer != nil {
 		t.timerCtxCancel()
