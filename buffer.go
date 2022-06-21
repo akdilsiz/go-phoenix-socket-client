@@ -1,6 +1,8 @@
 package go_phoenix_socket_client
 
-import "sync"
+import (
+	"sync"
+)
 
 // Buffer Offset writable memory buffer.
 // Reference by: https://github.com/aws/aws-sdk-go/blob/v1.44.33/aws/types.go#L163-L172
@@ -48,14 +50,17 @@ func (buf *Buffer) Bytes() []byte {
 	return buf.buf
 }
 
-// Reset clears the memory buffer.
-func (buf *Buffer) Reset() {
-	buf.buf = nil
-}
-
 // Length returns the size of the memory buffer.
 func (buf *Buffer) Length() int64 {
 	buf.mut.Lock()
 	defer buf.mut.Unlock()
 	return buf.l
+}
+
+// Reset clears the memory buffer.
+func (buf *Buffer) Reset() {
+	buf.mut.Lock()
+	buf.buf = nil
+	buf.l = 0
+	buf.mut.Unlock()
 }

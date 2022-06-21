@@ -6,6 +6,7 @@ import (
 )
 
 type Timer interface {
+	Tries() int
 	Reset()
 	ScheduleTimeout()
 }
@@ -27,6 +28,10 @@ func NewTimer(ctx context.Context, callback func(), timerCalc TimerCalc) Timer {
 	t.timerCalc = timerCalc
 
 	return t
+}
+
+func (t *timer) Tries() int {
+	return t.tries
 }
 
 func (t *timer) Reset() {
