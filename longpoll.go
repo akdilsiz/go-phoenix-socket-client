@@ -9,13 +9,7 @@ import (
 )
 
 // Longpoll phoenix longpoll transport interface
-type Longpoll interface {
-	EndpointURL() (*url.URL, error)
-	SetOnClose(fn func(event CloseEvent))
-	SetOnError(fn func(err string))
-}
-
-type longpoll struct {
+type Longpoll struct {
 	ctx           context.Context
 	mut           sync.Mutex
 	endpoint      string
@@ -23,20 +17,18 @@ type longpoll struct {
 	skipHeartbeat bool
 	pollEndpoint  string
 	readyState    constants.SocketState
-	onClose       func(event CloseEvent)
-	onError       func(err string)
 }
 
 // NewLongpoll initialize phoenix longpoll connector
-func NewLongpoll(ctx context.Context, endpoint string) Longpoll {
-	lp := new(longpoll)
+func NewLongpoll(ctx context.Context, endpoint string) (Transport, error) {
+	lp := new(Longpoll)
 	lp.ctx = ctx
 	lp.endpoint = endpoint
 	lp.pollEndpoint = lp.normalizeEndpoint()
-	return lp
+	return lp, nil
 }
 
-func (lp *longpoll) normalizeEndpoint() string {
+func (lp *Longpoll) normalizeEndpoint() string {
 	e := strings.ReplaceAll(lp.endpoint, "ws://", "http://")
 	e = strings.ReplaceAll(e, "wss://", "https://")
 	e = strings.ReplaceAll(e, string(constants.Websocket)+"/", string(constants.Longpoll)+"/")
@@ -44,26 +36,64 @@ func (lp *longpoll) normalizeEndpoint() string {
 }
 
 // EndpointURL ..
-func (lp *longpoll) EndpointURL() (*url.URL, error) {
-	u, err := url.Parse(lp.pollEndpoint)
-	if err != nil {
-		return nil, err
-	}
+func (lp *Longpoll) EndpointURL() *url.URL {
+	u, _ := url.Parse(lp.pollEndpoint)
 	u.Query().Set("token", lp.token)
 
-	return u, nil
+	return u
 }
 
-// SetOnClose ..
-func (lp *longpoll) SetOnClose(fn func(event CloseEvent)) {
-	lp.mut.Lock()
-	lp.onClose = fn
-	lp.mut.Unlock()
+func (lp *Longpoll) ReplaceTransport(newTransport Transport) {
+	//TODO implement me
+	panic("implement me")
 }
 
-// SetOnError ..
-func (lp *longpoll) SetOnError(fn func(err string)) {
-	lp.mut.Lock()
-	lp.onError = fn
-	lp.mut.Unlock()
+func (lp *Longpoll) Disconnect(callback func(), code int, reason string) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (lp *Longpoll) Teardown(callback func(), code int, reason string) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (lp *Longpoll) OnOpen() {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (lp *Longpoll) SetOnOpen(callback func()) string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (lp *Longpoll) OnError(err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (lp *Longpoll) SetOnError(callback func(err error, transportBefore Transport, establishedBefore int)) string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (lp *Longpoll) OnMessage(event interface{}) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (lp *Longpoll) SetOnMessage(callback func(event interface{})) string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (lp *Longpoll) OnClose(event interface{}) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (lp *Longpoll) SetOnClose(callback func(event interface{})) string {
+	//TODO implement me
+	panic("implement me")
 }

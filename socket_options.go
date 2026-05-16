@@ -32,7 +32,7 @@ var (
 // SocketOptions phoenix websocket connector options
 type SocketOptions struct {
 	Timeout             time.Duration
-	Transport           constants.Transport
+	Transport           Transport
 	Encode              Serializer
 	Decode              Serializer
 	HeartbeatIntervalMS time.Duration
@@ -48,7 +48,6 @@ type SocketOptions struct {
 func DefaultSocketOptions() *SocketOptions {
 	so := new(SocketOptions)
 	so.Timeout = constants.DefaultTimeout
-	so.Transport = constants.Websocket
 	so.Encode = NewSerializer()
 	so.Decode = NewSerializer()
 	so.HeartbeatIntervalMS = time.Second * 30

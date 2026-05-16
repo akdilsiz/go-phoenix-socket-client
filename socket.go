@@ -7,23 +7,14 @@ import (
 	"github.com/gorilla/websocket"
 	"net/http"
 	"net/url"
-	"regexp"
+	"reflect"
 	"strconv"
 	"sync"
 	"time"
 )
 
 // Socket phoenix websocket transport interface
-type Socket interface {
-	Protocol() string
-	EndpointURL() string
-	ReplaceTransport(newTransport constants.Transport)
-	Disconnect(callback func(), code int, reason string)
-	Teardown(callback func(), code int, reason string)
-	MakeRef() string
-}
-
-type socket struct {
+type Socket struct {
 	ctx                    context.Context
 	mut                    sync.Mutex
 	options                *SocketOptions
@@ -32,8 +23,8 @@ type socket struct {
 	sendBuffer             chan []byte
 	ref                    int64
 	timeout                time.Duration
-	transport              constants.Transport
-	establishedConnections int64
+	transport              Transport
+	establishedConnections int
 	defaultEncoder         Serializer
 	defaultDecoder         Serializer
 	closeWasClean          bool
@@ -59,9 +50,14 @@ type socket struct {
 }
 
 // NewSocket initialize phoenix websocket connector
-func NewSocket(ctx context.Context, endpoint string, options ...*SocketOptions) Socket {
-	s := new(socket)
+func NewSocket(ctx context.Context, endpoint string, options ...*SocketOptions) (Transport, error) {
+	s := new(Socket)
 	s.ctx = ctx
+
+	if _, err := url.Parse(endpoint); err != nil {
+		return nil, err
+	}
+
 	s.stateChangeCallbacks = StateChange{}
 	s.channels = make([]interface{}, 0)
 	s.sendBuffer = make(chan []byte)
@@ -79,14 +75,14 @@ func NewSocket(ctx context.Context, endpoint string, options ...*SocketOptions) 
 		// TODO: TearDown method implementation
 	}, s.reconnectAfterMS)
 
-	return s
+	return s, nil
 }
 
-func (s *socket) parseOptions(options *SocketOptions) {
+func (s *Socket) parseOptions(options *SocketOptions) {
 	s.options = options
 	s.timeout = options.Timeout
 	s.transport = options.Transport
-	if s.transport != constants.Longpoll {
+	if reflect.ValueOf(s.transport).Elem() == reflect.ValueOf(Longpoll{}).Elem() {
 		if options.Encode == nil {
 			s.encode = s.defaultEncoder
 		} else {
@@ -110,43 +106,121 @@ func (s *socket) parseOptions(options *SocketOptions) {
 	s.vsn = options.VSN
 }
 
-func (s *socket) hasLogger() bool {
+func (s *Socket) hasLogger() bool {
 	return s.logger != nil
 }
 
-// MakeRef ..
-func (s *socket) MakeRef() string {
+func (s *Socket) makeRef() string {
+	s.mut.Lock()
 	newRef := s.ref + 1
 	if newRef == s.ref {
 		s.ref = 0
 	} else {
 		s.ref = newRef
 	}
+	s.mut.Lock()
 
 	return strconv.FormatInt(s.ref, 10)
 }
 
+func (s *Socket) OnOpen() {
+	s.mut.Lock()
+	s.closeWasClean = false
+	s.establishedConnections++
+	//TODO: flush send buffer
+	s.reconnectTimer.Reset()
+	s.mut.Unlock()
+	for i := 0; i < len(s.stateChangeCallbacks.Open); i++ {
+		s.stateChangeCallbacks.Open[i].Callback()
+	}
+}
+
+func (s *Socket) SetOnOpen(callback func()) string {
+	ref := s.makeRef()
+	s.mut.Lock()
+	s.stateChangeCallbacks.Open = append(s.stateChangeCallbacks.Open, struct {
+		Ref      string
+		Callback func()
+	}{
+		Ref:      ref,
+		Callback: callback,
+	})
+	s.mut.Unlock()
+	return ref
+}
+
+func (s *Socket) OnError(err error) {
+	s.mut.Lock()
+	transportBefore := s.transport
+	establishedBefore := s.establishedConnections
+	s.mut.Unlock()
+	for i := 0; i < len(s.stateChangeCallbacks.Error); i++ {
+		s.stateChangeCallbacks.Error[i].Callback(err, transportBefore, establishedBefore)
+	}
+	if transportBefore == s.transport || establishedBefore > 0 {
+		//TODO: Trigger chan error
+	}
+}
+
+func (s *Socket) SetOnError(callback func(err error, transportBefore Transport, establishedBefore int)) string {
+	ref := s.makeRef()
+	s.mut.Lock()
+	s.stateChangeCallbacks.Error = append(s.stateChangeCallbacks.Error, struct {
+		Ref      string
+		Callback func(err error, transportBefore Transport, establishedBefore int)
+	}{
+		Ref:      ref,
+		Callback: callback,
+	})
+	s.mut.Unlock()
+	return ref
+}
+
+func (s *Socket) OnMessage(event interface{}) {
+
+}
+
+func (s *Socket) SetOnMessage(callback func(event interface{})) string {
+	ref := s.makeRef()
+	s.mut.Lock()
+	s.stateChangeCallbacks.Message = append(s.stateChangeCallbacks.Message, struct {
+		Ref      string
+		Callback func(event interface{})
+	}{
+		Ref:      ref,
+		Callback: callback,
+	})
+	s.mut.Unlock()
+	return ref
+}
+
+func (s *Socket) OnClose(event interface{}) {
+
+}
+
+func (s *Socket) SetOnClose(callback func(event interface{})) string {
+	ref := s.makeRef()
+	s.mut.Lock()
+	s.stateChangeCallbacks.Close = append(s.stateChangeCallbacks.Close, struct {
+		Ref      string
+		Callback func(event interface{})
+	}{
+		Ref:      ref,
+		Callback: callback,
+	})
+	s.mut.Unlock()
+	return ref
+}
+
 // ReplaceTransport ...
-func (s *socket) ReplaceTransport(newTransport constants.Transport) {
+func (s *Socket) ReplaceTransport(newTransport Transport) {
 	s.Disconnect(nil, 0, "")
 	s.transport = newTransport
 }
 
-// Protocol ...
-func (s *socket) Protocol() string {
-	matched, _ := regexp.MatchString(`(?s)^https`, s.endpoint)
-	if matched {
-		return "wss"
-	}
-	return "ws"
-}
-
 // EndpointURL ...
-func (s *socket) EndpointURL() string {
-	u, err := url.Parse(s.endpoint)
-	if err != nil {
-		return ""
-	}
+func (s *Socket) EndpointURL() *url.URL {
+	u, _ := url.Parse(s.endpoint)
 	for k, v := range s.params {
 		for i := 0; i < len(v); i++ {
 			if i == 0 {
@@ -157,19 +231,11 @@ func (s *socket) EndpointURL() string {
 		}
 	}
 	u.Query().Set("vsn", s.vsn)
-	uri := u.String()
-	if string(uri[0]) != "/" {
-		return uri
-	}
-	if string(uri[1]) == "/" {
-		return fmt.Sprintf("%s:%s", s.Protocol(), uri)
-	}
-
-	return fmt.Sprintf("%s://%s", s.Protocol(), uri)
+	return u
 }
 
 // Disconnect ..
-func (s *socket) Disconnect(callback func(), code int, reason string) {
+func (s *Socket) Disconnect(callback func(), code int, reason string) {
 	s.connectClock++
 	s.closeWasClean = true
 	s.reconnectTimer.Reset()
@@ -178,12 +244,12 @@ func (s *socket) Disconnect(callback func(), code int, reason string) {
 
 // Teardown ...
 // TODO: implement me!!
-func (s *socket) Teardown(callback func(), code int, reason string) {
+func (s *Socket) Teardown(callback func(), code int, reason string) {
 
 }
 
 // Connect ..
-func (s *socket) Connect() {
+func (s *Socket) Connect() {
 	s.connectClock++
 	if s.wsConn != nil {
 		return
